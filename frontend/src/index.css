@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+@import "tailwindcss"; 
+
+/* Global Font */
+html, body {
+  font-family: 'Outfit', sans-serif;
+}
+/* Theme Colors */
+:root {
+  --color-primary: #FFB600;      /* yellow */
+  --color-secondary: #930035;   /* maroon */
+  --color-background:  #FFFFFF; 
+}
+
+/*   color: #FFB600;  yellow    */
+/*   bg-color: #930035;  pink  */
+
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-slide {
+  animation: slideUp 2s ease-in-out;
+}
