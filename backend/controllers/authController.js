@@ -1,21 +1,22 @@
 const OTP = require("../models/otpModel");
 const jwt = require("jsonwebtoken");
-const twilio = require("twilio");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const axios = require("axios");
 
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-
+// Generate OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+// SEND OTP
 exports.sendOTP = async (req, res) => {
   try {
     console.log("SEND OTP API CALLED");
 
     const { mobile } = req.body;
 
+    // Validate mobile
     if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
       return res.status(400).json({
         success: false,
@@ -25,31 +26,38 @@ exports.sendOTP = async (req, res) => {
 
     const otp = generateOTP();
 
+    // Remove old OTP
     await OTP.deleteMany({ mobile });
 
+    // Save new OTP
     await OTP.create({
       mobile,
       otp,
       expiresAt: new Date(Date.now() + 3 * 60 * 1000),
     });
 
-    console.log("OTP SAVED IN DB");
+    // console.log("✅ OTP SAVED:", otp);
 
-    // SEND SMS HERE
-    const message = await client.messages.create({
-      body: `Your Delight App OTP is: ${otp}`,
-      from: process.env.TWILIO_PHONE,
-      to: `+91${mobile}`,
-    });
+    // // Send OTP in response (for testing)
+    // res.status(200).json({
+    //   success: true,
+    //   message: "OTP sent successfully",
+    //   otp: otp,
+    // });
+    console.log("OTP:", otp);
 
-    console.log("SMS SENT SID:", message.sid);
+// 📲 SEND SMS
+await axios.get("https://www.fast2sms.com/dev/bulkV2", {
+  params: {
+    authorization: "YOUR_API_KEY",
+    variables_values: otp,
+    route: "otp",
+    numbers: mobile,
+  },
+});
 
-    res.status(200).json({
-      success: true,
-      message: "OTP sent successfully",
-    });
   } catch (error) {
-    console.error("Twilio Error:", error);
+    console.error("❌ SEND OTP ERROR:", error.message);
     res.status(500).json({
       success: false,
       message: "Failed to send OTP",
@@ -57,6 +65,7 @@ exports.sendOTP = async (req, res) => {
   }
 };
 
+// VERIFY OTP
 exports.verifyOTP = async (req, res) => {
   try {
     const { mobile, otp } = req.body;
@@ -68,7 +77,7 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
-    const record = await OTP.findOne({ mobile});
+    const record = await OTP.findOne({ mobile });
 
     if (!record || record.otp !== otp) {
       return res.status(400).json({
@@ -84,7 +93,9 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
+    // Find or create user
     let user = await User.findOne({ mobile });
+
     if (!user) {
       user = await User.create({
         name: "New User",
@@ -94,31 +105,24 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
-    // Remove OTP after successful verification
+    // Delete OTP
     await OTP.deleteMany({ mobile });
 
-    // res.status(200).json({
-    // success: true,
-    // message: "Login Successful",
-    // });
-    // Generate JWT Token
+    // Generate JWT
     const token = jwt.sign(
       { id: user._id, role: user.role, mobile: user.mobile },
-
-      // { mobile }, // data to store inside token
-      process.env.JWT_SECRET, // secret key
-      { expiresIn: "7d" }, // valid for 7 days
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
     );
 
-    // Send token in response
     res.status(200).json({
       success: true,
       message: "Login Successful",
-      token: token,
-      role: user.role,
+      token,
     });
+
   } catch (error) {
-    console.error("Verify OTP Error:", error.message);
+    console.error("❌ VERIFY OTP ERROR:", error.message);
     res.status(500).json({
       success: false,
       message: "Failed to verify OTP",
@@ -126,18 +130,17 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
+// REGISTER WITH EMAIL
 exports.registerWithEmail = async (req, res) => {
   try {
     const { name, email, mobile, password } = req.body;
 
-    // Basic validation
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required",
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({
       $or: [{ email }, { mobile }],
     });
@@ -148,7 +151,6 @@ exports.registerWithEmail = async (req, res) => {
       });
     }
 
-    // Create user (password will auto-hash via pre-save)
     const user = await User.create({
       name,
       email,
@@ -162,42 +164,43 @@ exports.registerWithEmail = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Register Error:", error); // 👈 IMPORTANT
+    console.error("❌ REGISTER ERROR:", error.message);
     res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
 
-exports.loginWithEmail = async (req, res) =>{
-  try{
-    const {email, password} = req.body;
+// LOGIN WITH EMAIL
+exports.loginWithEmail = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
 
-    if(!user){
+    if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const  isMatch= await bcrypt.compare(password, user.password)
+    const isMatch = await bcrypt.compare(password, user.password);
 
-    if(!isMatch){
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
+
     const token = jwt.sign(
-      {id: user._id, role: user.role},
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      {expiresIn: "7d"}
+      { expiresIn: "7d" }
     );
 
     res.json({
       token,
-      role:  user.role,
+      role: user.role,
       email: user.email,
     });
-  }catch {
-    res.status(500).json({message: "Server error"});
+
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 };
-

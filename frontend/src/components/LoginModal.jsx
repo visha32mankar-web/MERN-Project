@@ -16,7 +16,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
   const navigate = useNavigate();
 
-  if (!isOpen) return null;
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -26,6 +26,8 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
       role === "admin" ? navigate("/admin") : navigate("/");
     }
   }, [navigate]);
+
+  if(!isOpen) return null;
 
   /* ================= SEND OTP ================= */
   const handleSendOTP = async (e) => {
