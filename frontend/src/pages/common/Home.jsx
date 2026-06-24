@@ -140,7 +140,7 @@ const Home = ({ slides }) => {
                   </span>
 
                   <button className="px-4 py-2 bg-[var(--color-secondary)] text-white hover:bg-[var(--color-primary)] transition">
-                    Add to Cart
+                    Order Now
                   </button>
                 </div>
               </div>

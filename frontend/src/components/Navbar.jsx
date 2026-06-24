@@ -15,6 +15,7 @@ import {
   FaMapMarkerAlt as FaLocationIcon,
   FaSearch,
   FaWallet,
+  FaHeart,
 } from "react-icons/fa";
 
 const Navbar = () => {
@@ -179,30 +180,39 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* RIGHT SECTION (Menu + Account) */}
-          <div className="hidden lg:flex items-center gap-6 shrink-0">
+          {/* RIGHT SECTION */}
+          <div className="hidden lg:flex items-center gap-5 shrink-0">
             <Link to="/" className="hover:text-[#930035] transition">
               Home
             </Link>
+
             <Link to="/about" className="hover:text-[#930035] transition">
               About us
             </Link>
+
             <Link to="/menu" className="hover:text-[#930035] transition">
               Menu
             </Link>
+
             <Link to="/feedback" className="hover:text-[#930035] transition">
               Feedback
             </Link>
+
             <Link to="/contactus" className="hover:text-[#930035] transition">
               Contact us
             </Link>
 
-            {/* ACCOUNT SECTION */}
+            {/* Wallet */}
+            <button className="p-2 rounded-full hover:bg-[#930035]/10 hover:scale-110 transition duration-200">
+              <FaWallet size={30} className="text-[var(--color-primary)]" />
+            </button>
+
+            {/* Login / Account */}
             {isLoggedIn ? (
               <div className="relative" ref={accountRef}>
                 <button
                   onClick={() => setOpenAccount(!openAccount)}
-                  className="h-[40px] px-6 rounded-full border border-gray-300 bg-white hover:bg-gray-100 transition"
+                  className="h-[40px] px-5 rounded-full border border-gray-300 bg-white hover:bg-gray-100 transition"
                 >
                   Account ▼
                 </button>
@@ -223,6 +233,7 @@ const Navbar = () => {
                     {/* MENU ITEMS */}
                     <div className="py-2">
                       {[
+                        { icon: <FaUserCircle />, label: "Profile" },
                         { icon: <FaCalendarAlt />, label: "Book a Table" },
                         { icon: <FaGift />, label: "Gift Card" },
                         { icon: <FaUserShield />, label: "Privacy & Policy" },
@@ -252,7 +263,6 @@ const Navbar = () => {
 
                     <hr />
 
-                    {/* LOGOUT */}
                     <button
                       onClick={() => {
                         localStorage.removeItem("token");
@@ -275,11 +285,16 @@ const Navbar = () => {
                 Login
               </button>
             )}
-          </div>
-          <div className="m-3 p-2 rounded-full text-[var(--color-primary)] hover:bg-[var(--color-secondary)]/10 hover:scale-110 transition duration-200 cursor-pointer">
-            <FaWallet size={28} />
-          </div>
 
+            {/* Wishlist Heart */}
+            <button className="relative p-2 rounded-full hover:bg-red-50 hover:scale-110 transition duration-200">
+              <FaHeart size={30}   className="text-[var(--color-primary)]" />
+
+              <span className="absolute -top-1 -right-1 bg-[var(--color-secondary)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                0
+              </span>
+            </button>
+          </div>
           {/* MOBILE MENU BUTTON */}
           <button onClick={() => setOpen(!open)} className="lg:hidden text-2xl">
             ☰

@@ -13,7 +13,10 @@ app.use(express.json());
 // Debug
 console.log("PORT:", process.env.PORT);
 console.log("MONGO:", process.env.MONGO_URI ? "Loaded" : "Not Loaded");
-console.log("TWILIO SID:", process.env.TWILIO_SID ? "Loaded" : "Not Loaded");
+console.log("EMAIL:", process.env.EMAIL_USER ? "Loaded" : "Not Loaded");
+
+// ✅ FIXED HERE
+console.log("TWILIO SID:", process.env.TWILIO_ACCOUNT_SID ? "Loaded" : "Not Loaded");
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI)
@@ -25,5 +28,5 @@ app.use("/api/auth", authRoutes);
 
 // Start Server
 app.listen(process.env.PORT, () => {
-  console.log(` Server running on port ${process.env.PORT}`);
+  console.log(`🚀 Server running on port ${process.env.PORT}`);
 });

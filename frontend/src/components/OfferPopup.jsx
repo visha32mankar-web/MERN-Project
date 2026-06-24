@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import offerImg from "../assets/images/DiscountOffer.png";
 
-const OfferPopup = () => {
+const OfferPopup = ({ onLoginClick }) => {
+ 
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -32,7 +33,11 @@ const OfferPopup = () => {
         <img
           src={offerImg}
           alt="Discount Offer"
-          className="w-full rounded-xl shadow-2xl"
+          onClick={() => {
+            setShow(false);
+            onLoginClick();
+          }}
+          className="w-full rounded-xl shadow-2xl cursor-pointer hover:scale-105 transition duration-300"
         />
       </div>
     </div>

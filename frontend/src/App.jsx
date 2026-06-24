@@ -26,7 +26,7 @@ const App = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar onLoginClick={() => setLoginOpen(true)} />
 
-      <OfferPopup />
+      <OfferPopup onLoginClick={()=> setLoginOpen(true)} />
 
       <main className="flex-grow bg-gray-100">
         <Routes>
