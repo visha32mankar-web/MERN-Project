@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
-import { sendOTP, verifyOTP, sendEmailOTP, verifyEmailOTP } from "../services/authService";
+import {
+  sendOTP,
+  verifyOTP,
+  sendEmailOTP,
+  verifyEmailOTP,
+} from "../services/authService";
 
 const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [loginType, setLoginType] = useState("phone");
@@ -11,6 +16,8 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
   const [showOTP, setShowOTP] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [timer, setTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
 
   const navigate = useNavigate();
 
@@ -23,9 +30,49 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
     }
   }, [navigate]);
 
-  if (!isOpen) return null;
 
+
+  // resend OTP method
+  useEffect(() => {
+    if (!showOTP) return;
+
+    if (timer <= 0) {
+      setCanResend(true);
+      return;
+    }
+
+    setCanResend(false);
+
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showOTP, timer]);
+
+    if (!isOpen) return null;
   /* ================= PHONE OTP ================= */
+  // const handleSendOTP = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   if (mobile.length !== 10) {
+  //     setError("Please enter a valid 10-digit mobile number");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     await sendOTP(mobile);
+  //      console.log("📱 Mobile:", mobile);
+  //   console.log("🔐 OTP:", res.data.otp);
+  //     setShowOTP(true);
+  //   } catch (err) {
+  //     setError("Error sending OTP");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError("");
@@ -37,30 +84,75 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
     try {
       setLoading(true);
-      await sendOTP(mobile);
+
+      const res = await sendOTP(mobile);
+
+      console.log("📱 Mobile:", mobile);
+      console.log("🔐 OTP:", res.data.otp);
+
       setShowOTP(true);
+
+      // resnd OTP
+      setTimer(30);
+      setCanResend(false);
     } catch (err) {
+      console.error(err);
       setError("Error sending OTP");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ================= EMAIL OTP ================= */
   const handleSendEmailOTP = async () => {
     setError("");
 
     if (!email) {
-      setError("Please enter email");
+      setError("Please enter a valid email");
       return;
     }
 
     try {
       setLoading(true);
-      await sendEmailOTP(email);
+
+      const res = await sendEmailOTP(email);
+
+      console.log("📧 Email:", email);
+      console.log("🔐 OTP:", res.data.otp);
+
       setShowOTP(true);
+      setTimer(30);
+      setCanResend(false);
     } catch (err) {
-      setError("Error sending OTP");
+      console.error(err);
+      setError("Error sending Email OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= EMAIL OTP ================= */
+  const handleResendOTP = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      if (loginType === "phone") {
+        const res = await sendOTP(mobile);
+
+        console.log("📱 Mobile:", mobile);
+        console.log("🔐 New OTP:", res.data.otp);
+      } else {
+        const res = await sendEmailOTP(email);
+
+        console.log("📧 Email:", email);
+        console.log("🔐 New OTP:", res.data.otp);
+      }
+
+      setTimer(30);
+      setCanResend(false);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to resend OTP");
     } finally {
       setLoading(false);
     }
@@ -105,138 +197,231 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white w-[90%] max-w-md rounded-xl shadow-lg p-6 relative"
+        className="bg-white w-[90%] max-w-md rounded-2xl shadow-2xl p-6 relative"
       >
-        {/* CLOSE */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-xl text-gray-500"
-        >
-          ✕
-        </button>
-
-        {/* LOGO */}
-        <div className="flex flex-col items-center mb-6">
-          <img src={logo} className="h-20 mb-2" />
-          <h2 className="text-2xl font-semibold">Delight Biryani</h2>
-          <p className="text-gray-500">
-            {showOTP ? "Enter OTP" : "Log in or Sign up"}
-          </p>
-        </div>
-
-        {/* TABS */}
+        {/* Close Button */}
         {!showOTP && (
-          <div className="flex justify-center mb-6 border-b">
-            <button
-              onClick={() => {
-                setLoginType("phone");
-                setError("");
-              }}
-              className={`px-6 py-2 ${
-                loginType === "phone"
-                  ? "border-b-2 border-black"
-                  : "text-gray-400"
-              }`}
-            >
-              Phone
-            </button>
-
-            <button
-              onClick={() => {
-                setLoginType("email");
-                setError("");
-              }}
-              className={`px-6 py-2 ${
-                loginType === "email"
-                  ? "border-b-2 border-black"
-                  : "text-gray-400"
-              }`}
-            >
-              Email
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-black"
+          >
+            ✕
+          </button>
         )}
 
-        {/* ================= PHONE ================= */}
-        {loginType === "phone" && !showOTP && (
-          <form onSubmit={handleSendOTP} className="space-y-5">
-            <div className="flex items-center border rounded-xl px-3 py-3">
-              <span className="mr-2">+91</span>
-              <input
-                type="tel"
-                placeholder="Enter mobile number"
-                value={mobile}
-                onChange={(e) =>
-                  setMobile(e.target.value.replace(/\D/g, ""))
-                }
-                maxLength={10}
-                className="w-full outline-none"
-              />
+        {/* ================= LOGIN SCREEN ================= */}
+        {!showOTP && (
+          <>
+            {/* Logo */}
+            <div className="flex flex-col items-center mb-6">
+              <img src={logo} alt="Logo" className="h-20 mb-3" />
+              <h2 className="text-2xl font-bold">Delight Biryani</h2>
+              <p className="text-gray-500">Log in or Sign up</p>
             </div>
+
+            {/* Tabs */}
+            <div className="flex justify-center border-b mb-6">
+              <button
+                onClick={() => {
+                  setLoginType("phone");
+                  setError("");
+                }}
+                className={`px-6 py-3 font-medium ${
+                  loginType === "phone"
+                    ? "border-b-2 border-black text-black"
+                    : "text-gray-400"
+                }`}
+              >
+                Phone
+              </button>
+
+              <button
+                onClick={() => {
+                  setLoginType("email");
+                  setError("");
+                }}
+                className={`px-6 py-3 font-medium ${
+                  loginType === "email"
+                    ? "border-b-2 border-black text-black"
+                    : "text-gray-400"
+                }`}
+              >
+                Email
+              </button>
+            </div>
+
+            {/* ================= PHONE LOGIN ================= */}
+            {loginType === "phone" && (
+              <form className="space-y-5">
+                <div className="flex items-center border rounded-xl h-14 px-4">
+                  <span className="mr-2 font-medium text-gray-600">+91</span>
+
+                  <input
+                    type="tel"
+                    placeholder="Enter mobile number"
+                    value={mobile}
+                    onChange={(e) =>
+                      setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
+                    }
+                    maxLength={10}
+                    className="w-full outline-none"
+                  />
+                </div>
+
+                {error && <p className="text-red-500 text-center">{error}</p>}
+
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  disabled={mobile.length !== 10 || loading}
+                  className={`w-full h-14 rounded-xl font-semibold transition ${
+                    mobile.length === 10
+                      ? "bg-[var(--color-secondary)] text-white"
+                      : "bg-gray-300 text-white"
+                  }`}
+                >
+                  {loading ? "Sending..." : "Continue"}
+                </button>
+
+                <p className="text-xs text-gray-500 text-center leading-5">
+                  By continuing, you agree to our{" "}
+                  <a
+                    href="/terms-of-service"
+                    target="_blank"
+                    className="text-pink-600 font-medium hover:underline"
+                  >
+                    Terms of Service
+                  </a>{" "}
+                  &{" "}
+                  <a
+                    href="/privacy-policy"
+                    target="_blank"
+                    className="text-pink-600 font-medium hover:underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </p>
+              </form>
+            )}
+
+            {/* ================= EMAIL LOGIN ================= */}
+            {loginType === "email" && (
+              <form className="space-y-5">
+                <div className="border rounded-xl h-14 px-4 flex items-center">
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full outline-none"
+                  />
+                </div>
+
+                {error && <p className="text-red-500 text-center">{error}</p>}
+
+                <button
+                  type="button"
+                  onClick={handleSendEmailOTP}
+                  disabled={!email || loading}
+                  className={`w-full h-14 rounded-xl font-semibold transition ${
+                    email
+                      ? "bg-[var(--color-secondary)] text-white"
+                      : "bg-gray-300 text-white"
+                  }`}
+                >
+                  {loading ? "Sending..." : "Continue"}
+                </button>
+
+                <p className="text-xs text-gray-500 text-center leading-5">
+                  By continuing, you agree to our{" "}
+                  <a
+                    href="/terms-of-service"
+                    target="_blank"
+                    className="text-pink-600 font-medium hover:underline"
+                  >
+                    Terms of Service
+                  </a>{" "}
+                  &{" "}
+                  <a
+                    href="/privacy-policy"
+                    target="_blank"
+                    className="text-pink-600 font-medium hover:underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </p>
+              </form>
+            )}
+          </>
+        )}
+
+        {/* ================= OTP SCREEN ================= */}
+        {showOTP && (
+          <form onSubmit={handleVerifyOTP} className="space-y-6">
+            <button
+              type="button"
+              onClick={() => {
+                setShowOTP(false);
+                setOtp("");
+                setError("");
+                setTimer(30);
+                setCanResend(false);
+              }}
+              className="text-2xl"
+            >
+              ←
+            </button>
+
+            <div className="text-center">
+              <h2 className="text-2xl font-bold">OTP Verification</h2>
+
+              <p className="text-gray-500 mt-4">
+                We have sent a verification code to
+              </p>
+
+              <p className="font-semibold mt-2">
+                {loginType === "phone" ? `+91-${mobile}` : email}
+              </p>
+            </div>
+
+            <input
+              type="text"
+              maxLength={6}
+              value={otp}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+              placeholder="______"
+              className="w-full border rounded-xl py-4 text-center text-3xl tracking-[18px] outline-none"
+            />
 
             {error && <p className="text-red-500 text-center">{error}</p>}
 
             <button
               type="submit"
-              disabled={mobile.length !== 10}
-              className={`w-full py-3 rounded-lg ${
-                mobile.length === 10
-                  ? "bg-[var(--color-secondary)] text-white"
-                  : "bg-gray-300"
-              }`}
+              disabled={loading || otp.length !== 6}
+              className="w-full h-14 rounded-xl bg-green-600 text-white font-semibold"
             >
-              Continue
+              {loading ? "Verifying..." : "Verify OTP"}
             </button>
-          </form>
-        )}
 
-        {/* ================= EMAIL ================= */}
-        {loginType === "email" && !showOTP && (
-          <form className="space-y-5">
-            <div className="flex items-center border rounded-xl px-3 py-3">
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full outline-none"
-              />
+            <div className="text-center">
+              <p className="text-gray-500">Didn't receive the OTP?</p>
+
+              {canResend ? (
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  className="mt-2 text-[var(--color-secondary)] font-semibold hover:underline"
+                >
+                  Resend OTP
+                </button>
+              ) : (
+                <p className="mt-2 text-gray-500">
+                  Resend OTP in <span className="font-semibold">{timer}s</span>
+                </p>
+              )}
             </div>
-
-            {error && <p className="text-red-500 text-center">{error}</p>}
-
-            <button
-              type="button"
-              onClick={handleSendEmailOTP}
-              disabled={!email}
-              className={`w-full py-3 rounded-lg ${
-                email
-                  ? "bg-[var(--color-secondary)] text-white"
-                  : "bg-gray-300"
-              }`}
-            >
-              Continue
-            </button>
-          </form>
-        )}
-
-        {/* ================= OTP ================= */}
-        {showOTP && (
-          <form onSubmit={handleVerifyOTP} className="space-y-5">
-            <input
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              maxLength={6}
-              className="w-full border px-3 py-3 rounded-xl"
-            />
-
-            {error && <p className="text-red-500 text-center">{error}</p>}
-
-            <button className="w-full py-3 bg-green-600 text-white rounded-lg">
-              Verify OTP
-            </button>
           </form>
         )}
       </div>

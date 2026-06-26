@@ -1,9 +1,9 @@
-
 const OTP = require("../models/otpModel");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const { sendOTPEmail } = require("../utils/sendEmail");
+const { sendSMS } = require("../utils/sendSMS");
 
 // Generate OTP
 const generateOTP = () => {
@@ -27,82 +27,101 @@ exports.sendOTP = async (req, res) => {
 
     const otp = generateOTP();
 
-    // ================= MOBILE OTP =================
-    if (mobile && !email) {
+// ================= MOBILE OTP =================
+if (mobile && !email) {
+  // Remove non-numeric characters and keep last 10 digits
+  const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
 
-      const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
-
-      if (cleanMobile.length !== 10) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid mobile number",
-        });
-      }
-
-      await OTP.deleteMany({ mobile: cleanMobile });
-
-      await OTP.create({
-        mobile: cleanMobile,
-        otp,
-        expiresAt: new Date(Date.now() + 3 * 60 * 1000),
-      });
-
-      console.log("📱 Mobile:", cleanMobile);
-      console.log("🔑 OTP:", otp);
-
-      return res.status(200).json({
-        success: true,
-        message: "OTP generated successfully",
-        otp, // remove in production
-      });
-    }
-
-    // ================= EMAIL OTP =================
-    if (email) {
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid email address",
-        });
-      }
-
-      await OTP.deleteMany({ email });
-
-      await OTP.create({
-        email,
-        otp,
-        expiresAt: new Date(Date.now() + 3 * 60 * 1000),
-      });
-
-      await sendOTPEmail(email, otp);
-
-      console.log("📧 Email:", email);
-      console.log("🔑 OTP:", otp);
-
-      return res.status(200).json({
-        success: true,
-        message: "OTP sent to email",
-      });
-    }
-
-  } catch (error) {
-    console.error("❌ SEND OTP ERROR:");
-    console.error(error);
-
-    return res.status(500).json({
+  // Validate mobile number
+  if (cleanMobile.length !== 10) {
+    return res.status(400).json({
       success: false,
-      message: error.message,
+      message: "Invalid mobile number",
     });
   }
-};
 
+  // Delete previous OTP
+  await OTP.deleteMany({ mobile: cleanMobile });
+
+  // Save new OTP in MongoDB
+  await OTP.create({
+    mobile: cleanMobile,
+    otp,
+    expiresAt: new Date(Date.now() + 3 * 60 * 1000), // 3 minutes
+  });
+
+  // Print OTP in terminal
+  const smsSent = await sendSMS(cleanMobile, otp);
+
+  if (!smsSent) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate OTP",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "OTP generated successfully",
+    otp, // Remove this in production
+  });
+}
+
+  // ================= EMAIL OTP =================
+  if (email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email address",
+      });
+    }
+
+    await OTP.deleteMany({ email });
+
+    await OTP.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 3 * 60 * 1000),
+    });
+
+    const emailSent = await sendOTPEmail(email, otp);
+
+    if (!emailSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send email",
+      });
+    }
+
+    console.log("📧 Email:", email);
+    console.log("🔑 OTP:", otp);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent to email",
+    });
+  }
+
+  return res.status(400).json({
+    success: false,
+    message: "Invalid request",
+  });
+
+} catch (error) {
+  console.error("❌ SEND OTP ERROR:");
+  console.error(error);
+
+  return res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+}
+};
 // ================= VERIFY OTP =================
 exports.verifyOTP = async (req, res) => {
   try {
-
     const { mobile, email, otp } = req.body;
 
     if ((!mobile && !email) || !otp) {
@@ -142,7 +161,6 @@ exports.verifyOTP = async (req, res) => {
     let user;
 
     if (mobile) {
-
       const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
 
       user = await User.findOne({ mobile: cleanMobile });
@@ -155,9 +173,7 @@ exports.verifyOTP = async (req, res) => {
           role: "user",
         });
       }
-
     } else {
-
       user = await User.findOne({ email });
 
       if (!user) {
@@ -179,7 +195,7 @@ exports.verifyOTP = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
     return res.status(200).json({
@@ -189,7 +205,6 @@ exports.verifyOTP = async (req, res) => {
       role: user.role,
       user,
     });
-
   } catch (error) {
     console.error("❌ VERIFY OTP ERROR:");
     console.error(error);
@@ -204,7 +219,6 @@ exports.verifyOTP = async (req, res) => {
 // ================= REGISTER =================
 exports.registerWithEmail = async (req, res) => {
   try {
-
     const { name, email, mobile, password } = req.body;
 
     const existingUser = await User.findOne({
@@ -232,7 +246,6 @@ exports.registerWithEmail = async (req, res) => {
       success: true,
       message: "Registration successful",
     });
-
   } catch (error) {
     console.error("❌ REGISTER ERROR:");
     console.error(error);
@@ -247,7 +260,6 @@ exports.registerWithEmail = async (req, res) => {
 // ================= LOGIN =================
 exports.loginWithEmail = async (req, res) => {
   try {
-
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -259,10 +271,7 @@ exports.loginWithEmail = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -279,7 +288,7 @@ exports.loginWithEmail = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
     return res.status(200).json({
@@ -288,7 +297,6 @@ exports.loginWithEmail = async (req, res) => {
       role: user.role,
       user,
     });
-
   } catch (error) {
     console.error("❌ LOGIN ERROR:");
     console.error(error);
@@ -299,4 +307,3 @@ exports.loginWithEmail = async (req, res) => {
     });
   }
 };
-

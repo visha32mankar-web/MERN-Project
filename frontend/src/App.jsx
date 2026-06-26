@@ -12,6 +12,8 @@ import ContactUs from "./pages/common/ContactUs";
 import Menu from "./pages/common/Menu";
 import Unsubscribe from "./pages/common/Unsubscribe";
 import LoginModal from "./components/LoginModal";
+import TermsOfService from "./pages/common/TermsOfService";
+import PrivacyPolicy from "./pages/common/PrivacyPolicy";
 
 const App = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
@@ -26,7 +28,7 @@ const App = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar onLoginClick={() => setLoginOpen(true)} />
 
-      <OfferPopup onLoginClick={()=> setLoginOpen(true)} />
+      <OfferPopup onLoginClick={() => setLoginOpen(true)} />
 
       <main className="flex-grow bg-gray-100">
         <Routes>
@@ -35,7 +37,9 @@ const App = () => {
           <Route path="/menu" element={<Menu />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/contactus" element={<ContactUs />} />
-          <Route path="unsubscribe" element={<Unsubscribe />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </main>
 
