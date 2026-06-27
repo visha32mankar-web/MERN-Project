@@ -28,6 +28,8 @@ const Navbar = () => {
   const [searchText, setSearchText] = useState("");
   const accountRef = useRef(null);
 
+ const wishlistCount = 0; 
+
   //search flip
   const [index, setIndex] = useState(0);
 
@@ -287,12 +289,34 @@ const Navbar = () => {
             )}
 
             {/* Wishlist Heart */}
-            <button className="relative p-2 rounded-full hover:bg-red-50 hover:scale-110 transition duration-200">
-              <FaHeart size={30}   className="text-[var(--color-primary)]" />
+            <button
+              className={`relative flex items-center justify-center w-28 h-16 rounded-xl transition-all duration-300 ${
+                wishlistCount === 0
+                  ? "bg-gray-200 cursor-not-allowed"
+                  : "bg-red-50 hover:bg-red-100 hover:scale-105"
+              }`}
+              disabled={wishlistCount  === 0}
+            >
+              <FaHeart
+                size={28}
+                className={
+                  wishlistCount === 0
+                    ? "text-gray-400"
+                    : "text-[var(--color-primary)]"
+                }
+              />
 
-              <span className="absolute -top-1 -right-1 bg-[var(--color-secondary)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                0
-              </span>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[var(--color-secondary)] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {wishlistCount }
+                </span>
+              )}
+
+              {wishlistCount  === 0 && (
+                <span className="ml-2 text-gray-400 font-semibold text-sm">
+                  Wishlist
+                </span>
+              )}
             </button>
           </div>
           {/* MOBILE MENU BUTTON */}
