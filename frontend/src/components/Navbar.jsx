@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
-import LoginModal from "./LoginModal";
+// import LoginModal from "./LoginModal";
 import {
   FaCalendarAlt,
   FaGift,
@@ -18,17 +18,18 @@ import {
   FaHeart,
 } from "react-icons/fa";
 
-const Navbar = () => {
+const Navbar = ({ onLoginClick }) => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [locationText, setLocationText] = useState("");
-  const [openLogin, setOpenLogin] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  // const [openLogin, setOpenLogin] = useState(false);
   const [openAccount, setOpenAccount] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [searchText, setSearchText] = useState("");
   const accountRef = useRef(null);
 
- const wishlistCount = 0; 
+  const wishlistCount = 0;
 
   //search flip
   const [index, setIndex] = useState(0);
@@ -191,6 +192,13 @@ const Navbar = () => {
             <Link to="/about" className="hover:text-[#930035] transition">
               About us
             </Link>
+            {/* <Link
+              to="/about"
+              onClick={() => console.log("About clicked")}
+              className="hover:text-[#930035] transition"
+            >
+              About us
+            </Link> */}
 
             <Link to="/menu" className="hover:text-[#930035] transition">
               Menu
@@ -235,22 +243,58 @@ const Navbar = () => {
                     {/* MENU ITEMS */}
                     <div className="py-2">
                       {[
-                        { icon: <FaUserCircle />, label: "Profile" },
-                        { icon: <FaCalendarAlt />, label: "Book a Table" },
-                        { icon: <FaGift />, label: "Gift Card" },
-                        { icon: <FaUserShield />, label: "Privacy & Policy" },
-                        { icon: <FaBell />, label: "Notifications" },
-                        { icon: <FaCommentDots />, label: "Feedback" },
+                        {
+                          icon: <FaUserCircle />,
+                          label: "Profile",
+                          path: "/profile",
+                        },
+                        {
+                          icon: <FaCalendarAlt />,
+                          label: "Book a Table",
+                          path: "/book-table",
+                        },
+                        {
+                          icon: <FaGift />,
+                          label: "Gift Card",
+                          path: "/gift-card",
+                        },
+                        {
+                          icon: <FaUserShield />,
+                          label: "Privacy & Policy",
+                          path: "/privacy-policy",
+                        },
+                        {
+                          icon: <FaBell />,
+                          label: "Notifications",
+                          path: "/notifications",
+                        },
+                        {
+                          icon: <FaCommentDots />,
+                          label: "Feedback",
+                          path: "/feedback",
+                        },
                         {
                           icon: <FaPrescriptionBottleAlt />,
                           label: "Prescriptions",
+                          path: "/prescriptions",
                         },
-                        { icon: <FaStore />, label: "Store Locator" },
-                        { icon: <FaMapMarkerAlt />, label: "Saved Addresses" },
+                        {
+                          icon: <FaStore />,
+                          label: "Store Locator",
+                          path: "/store-locator",
+                        },
+                        {
+                          icon: <FaMapMarkerAlt />,
+                          label: "Saved Addresses",
+                          path: "/saved-addresses",
+                        },
                       ].map((item, index) => (
                         <button
                           key={index}
-                          onClick={() => setOpenAccount(false)}
+                          onClick={() => {
+                            setOpenAccount(false);
+                            navigate(item.path);
+                          }}
                           className="group w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 transition"
                         >
                           <span className="text-gray-500 group-hover:text-[#930035]">
@@ -281,7 +325,7 @@ const Navbar = () => {
               </div>
             ) : (
               <button
-                onClick={() => setOpenLogin(true)}
+                onClick={onLoginClick}
                 className="h-[40px] px-7 rounded-full bg-[var(--color-secondary)] text-white hover:bg-[var(--color-primary)] transition"
               >
                 Login
@@ -295,7 +339,7 @@ const Navbar = () => {
                   ? "bg-gray-200 cursor-not-allowed"
                   : "bg-red-50 hover:bg-red-100 hover:scale-105"
               }`}
-              disabled={wishlistCount  === 0}
+              disabled={wishlistCount === 0}
             >
               <FaHeart
                 size={28}
@@ -308,17 +352,18 @@ const Navbar = () => {
 
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-[var(--color-secondary)] text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                  {wishlistCount }
+                  {wishlistCount}
                 </span>
               )}
 
-              {wishlistCount  === 0 && (
+              {wishlistCount === 0 && (
                 <span className="ml-2 text-gray-400 font-semibold text-sm">
                   Wishlist
                 </span>
               )}
             </button>
           </div>
+
           {/* MOBILE MENU BUTTON */}
           <button onClick={() => setOpen(!open)} className="lg:hidden text-2xl">
             ☰
@@ -326,14 +371,14 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <LoginModal
+      {/* <LoginModal
         isOpen={openLogin}
         onClose={() => setOpenLogin(false)}
         onLoginSuccess={() => {
           setIsLoggedIn(true);
           setOpenLogin(false);
         }}
-      />
+      /> */}
     </>
   );
 };

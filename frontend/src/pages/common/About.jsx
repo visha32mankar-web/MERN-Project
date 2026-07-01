@@ -1,6 +1,6 @@
 import React from "react";
-import aboutVideo1 from "../../assets/videos/BiryaniGarnishing.mp4";
-
+import BiryaniVideo from "../../assets/videos/BiryaniGarnishing.mp4";
+// D:\Demo\MERN\frontend\src\assets\videos\BiryaniGarnishing.mp4
 const About = () => {
   return (
     <div className="min-h-screen px-4 py-10 bg-gray-50">
@@ -39,15 +39,9 @@ const About = () => {
 
             {/* VIDEO */}
             <div className="flex flex-col items-center ">
-              <video
-                src={aboutVideo1}
-                controls
-                autoPlay
-                muted
-                loop
-                className="w-full h-[450px] object-cover rounded-lg"
-              />
-
+             <video autoPlay loop muted playsInline>
+  <source src={BiryaniVideo} type="video/mp4" />
+</video>
               <span className="mt-4 pt-2 border-t text-[var(--color-secondary)] text-2xl font-semibold text-center w-full">
                Authentic Taste 
               </span>

@@ -14,6 +14,7 @@ import Unsubscribe from "./pages/common/Unsubscribe";
 import LoginModal from "./components/LoginModal";
 import TermsOfService from "./pages/common/TermsOfService";
 import PrivacyPolicy from "./pages/common/PrivacyPolicy";
+import Profile from "./pages/user/Profile";
 
 const App = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
@@ -40,10 +41,18 @@ const App = () => {
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
 
-      <LoginModal isOpen={isLoginOpen} onClose={() => setLoginOpen(false)} />
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setLoginOpen(false)}
+        onLoginSuccess={() => {
+          setLoginOpen(false);
+        }}
+      />
 
       <Footer />
     </div>

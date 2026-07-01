@@ -23,14 +23,14 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   const role = localStorage.getItem("role");
 
-    if (token && role) {
-      role === "admin" ? navigate("/admin") : navigate("/");
-    }
-  }, [navigate]);
+  //   if (token && role) {
+  //     role === "admin" ? navigate("/admin") : navigate("/");
+  //   }
+  // }, [navigate]);
 
 
 
