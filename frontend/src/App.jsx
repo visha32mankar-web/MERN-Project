@@ -15,6 +15,7 @@ import LoginModal from "./components/LoginModal";
 import TermsOfService from "./pages/common/TermsOfService";
 import PrivacyPolicy from "./pages/common/PrivacyPolicy";
 import Profile from "./pages/user/Profile";
+import TableBooking from "./pages/user/TableBooking";
 
 const App = () => {
   const [isLoginOpen, setLoginOpen] = useState(false);
@@ -43,6 +44,8 @@ const App = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
           <Route path="/profile" element={<Profile />} />
+          <Route path="/table-booking" element={<TableBooking />} />
+          {/* <Route path="/table-booking" element={<TableBooking />} /> */}
         </Routes>
       </main>
 

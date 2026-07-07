@@ -251,7 +251,7 @@ const Navbar = ({ onLoginClick }) => {
                         {
                           icon: <FaCalendarAlt />,
                           label: "Book a Table",
-                          path: "/book-table",
+                          path: "/table-booking",
                         },
                         {
                           icon: <FaGift />,
